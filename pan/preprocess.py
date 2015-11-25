@@ -76,6 +76,8 @@ def detwittify(texts):
     :returns: list of texts cleaned from twitter specific text
 
     """
+
+
     output = []
     for text in texts:
         # remove urls from text
@@ -85,6 +87,7 @@ def detwittify(texts):
         # replace @ tags
         cleaned = REPLYREGEX.sub('', cleaned)
         output.append(cleaned.strip())
+
     return output
 
 
@@ -155,3 +158,9 @@ def silhouette(texts):
         sil_text = re.sub(ur'(\d+?)', lambda match: 'd', sil_text)
         silhouetted.append(sil_text)
     return silhouetted
+
+def clean_regex(X):
+#	X=[re.sub(self.regex, self.val, tweet) for tweet in X]
+	X=[re.sub('[0-9]+', 'number', tweet) for tweet in X]
+#	print(X)
+	return X

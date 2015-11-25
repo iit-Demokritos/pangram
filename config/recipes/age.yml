@@ -6,6 +6,7 @@ pipeline:
     steps:
       - clean html
       - detwittify
+      - clean regex
       - count 3grams tfidf
       - svm
 
@@ -30,6 +31,11 @@ html cleaner:
 detwittifier:
   label: detwittify
   estimator: detwittify
+  estimator_pkg: pan.preprocess
+
+regex cleaner:
+  label: clean regex
+  estimator: clean_regex
   estimator_pkg: pan.preprocess
 
 printer:

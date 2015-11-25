@@ -1,12 +1,14 @@
+from __future__ import division
 import os.path
 import regex as re
 import pandas as pd
 import preprocess
 import numpy
+import textwrap
+import math
 from pan import Pan
 from config import Config
 from collections import OrderedDict
-
 
 class DatasetLoader(object):
 
@@ -237,7 +239,10 @@ class ProfilingDataset(DatasetLoader):
         """
         data = []
         for entry in self.entries:
-            data.append(entry.datafy(feature=feature))
+            temp = entry.datafy(feature=feature, chunks=10)
+            for x in temp:
+                data.append(x)
+
         # zip produces tuples, we want to be able to modify
         # the contents in preprocessing in place
         # therefore we create we replace tuples with lists using map
@@ -320,15 +325,22 @@ class AuthorProfile(object):
         body = body.replace('gender="F"', 'gender="female"')
         return header + body + footer
 
-    def get_text(self, separator=''):
+    def get_text(self, chunks, separator=''):
         """ Get text with preprocess label
+            Take (no_chunks-1) even-sized chunks and the rest to the last chunk
 
         :label: The label of the preprocessed set to get texts from
         :separator: The string to use inbetween texts
         :returns: a string containing all the texts joined with separators
 
         """
-        return separator.join(self.texts)
+        #TODO chunks < len(self.texts)
+
+        size = int(math.floor(len(self.texts)/ chunks))
+#        return separator.join(self.texts)
+#        return [separator.join(z) for z in [self.texts[y:y+size] for y in range(0, len(self.texts), size)]]
+        lim = (chunks-1)*size
+        return [separator.join(z) for z in [self.texts[y:y+size] for y in range(0, lim, size)]] + [separator.join(z) for z in [self.texts[lim:len(self.texts)]]]
 
     def get_label(self, feature):
         """ Get label for this instance
@@ -339,15 +351,15 @@ class AuthorProfile(object):
         """
         return getattr(self, feature)
 
-    def datafy(self, feature='none'):
+    def datafy(self, feature='none', chunks=1):
         """Return a tuple of data - training and label if feature is not none
 
         :feature: the feature we want the label for
         :returns: tuple of data, label
 
         """
+
         if feature == 'none':
-            return self.get_text(separator='\n')
+            return self.get_text(chunks, separator='\n')
         else:
-            return [self.get_text(separator='\n'),
-                    getattr(self, feature)]
+            return [[x,getattr(self,feature)] for x in self.get_text(chunks, separator='\n')]

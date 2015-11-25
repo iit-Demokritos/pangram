@@ -4,9 +4,17 @@ from argparse import ArgumentParser
 from pan import ProfilingDataset
 from tictacs import from_recipe
 from sklearn.grid_search import GridSearchCV
+from sklearn.metrics import accuracy_score
 
 log = []
 
+def scorer(estimator, X, y=None):
+    y_pred = [i for i in estimator.predict(X)]
+    new_y = [y[i] for i in range(0,len(y),10)]
+    new_y_pred = [max(set(l), key=l.count) for l in [y_pred[i:i+10] for i in range(0,len(y_pred),10)]]
+#    new_y_pred = [y_pred[i] for i in range(0,len(y_pred),10)]
+
+    return accuracy_score(new_y, new_y_pred)
 
 def cross_val(dataset, task, model, num_folds=4):
     """ train and cross validate a model
@@ -26,7 +34,7 @@ def cross_val(dataset, task, model, num_folds=4):
                (dataset.lang, task, model.__class__.__name__))
     if task in dataset.config.classifier_list:
         grid_cv = GridSearchCV(model, params, cv=num_folds, verbose=1,
-                               n_jobs=-1)
+                               n_jobs=-1, scoring=scorer)
         grid_cv.fit(X, y)
         accuracy = grid_cv.best_score_
         log.append('best params: %s' % grid_cv.best_params_)
