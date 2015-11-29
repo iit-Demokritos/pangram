@@ -6,6 +6,7 @@ import preprocess
 import numpy
 import textwrap
 import math
+import random
 from pan import Pan
 from config import Config
 from collections import OrderedDict
@@ -30,7 +31,7 @@ class ProfilingDataset(DatasetLoader):
 
     """Docstring for ProfilingDataset. """
 
-    def __init__(self, path):
+    def __init__(self, path, chunks=1):
         """ Load the profiling datset from this folder
 
         :path: path to the folder which contains the datafiles
@@ -40,6 +41,7 @@ class ProfilingDataset(DatasetLoader):
         self.config = Config(self.lang)
         self.truth_mapping = self.config.truth_mapping
         self.entries = self._read_entries()
+        self.chunks = chunks
         # TODO see where you are going to put this
         # self.discard_empty()
         # self.discard_duplicates()
@@ -239,7 +241,7 @@ class ProfilingDataset(DatasetLoader):
         """
         data = []
         for entry in self.entries:
-            temp = entry.datafy(feature=feature, chunks=10)
+            temp = entry.datafy(feature=feature, chunks=self.chunks)
             for x in temp:
                 data.append(x)
 
@@ -334,13 +336,14 @@ class AuthorProfile(object):
         :returns: a string containing all the texts joined with separators
 
         """
-        #TODO chunks < len(self.texts)
 
-        size = int(math.floor(len(self.texts)/ chunks))
-#        return separator.join(self.texts)
-#        return [separator.join(z) for z in [self.texts[y:y+size] for y in range(0, len(self.texts), size)]]
-        lim = (chunks-1)*size
-        return [separator.join(z) for z in [self.texts[y:y+size] for y in range(0, lim, size)]] + [separator.join(z) for z in [self.texts[lim:len(self.texts)]]]
+        if(chunks < len(self.texts)):
+            size = int(math.floor(len(self.texts)/ chunks))
+            lim = (chunks-1)*size
+            return [separator.join(z) for z in [self.texts[y:y+size] for y in range(0, lim, size)]] + [separator.join(z) for z in [self.texts[lim:len(self.texts)]]]
+        else :
+            lim = len(self.texts)
+            return self.texts + [self.texts[i] for i in [random.randrange(0,lim) for i in range(0,chunks-lim)]]
 
     def get_label(self, feature):
         """ Get label for this instance

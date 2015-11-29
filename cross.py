@@ -8,10 +8,13 @@ from sklearn.metrics import accuracy_score
 
 log = []
 
+chunks = 100
+
 def scorer(estimator, X, y=None):
     y_pred = [i for i in estimator.predict(X)]
-    new_y = [y[i] for i in range(0,len(y),10)]
-    new_y_pred = [max(set(l), key=l.count) for l in [y_pred[i:i+10] for i in range(0,len(y_pred),10)]]
+#    new_y = [y[i] for i in range(0,len(y),chunks)]
+    new_y = y[::chunks]
+    new_y_pred = [max(set(l), key=l.count) for l in [y_pred[i:i+chunks] for i in range(0,len(y_pred),chunks)]]
 #    new_y_pred = [y_pred[i] for i in range(0,len(y_pred),10)]
 
     return accuracy_score(new_y, new_y_pred)
@@ -62,7 +65,7 @@ if __name__ == '__main__':
     num_folds = args.num_folds
 
     print('Loading dataset...')
-    dataset = ProfilingDataset(infolder)
+    dataset = ProfilingDataset(infolder,chunks)
     print('Loaded %s users...\n' % len(dataset.entries))
     config = dataset.config
     tasks = config.tasks
